@@ -1,9 +1,10 @@
 (function() {
 
+// Plugin variables isolated outside registration
 let fixEnabled = false;
 let originalRenderOrders = new Map();
+let toggleAction;
 
-// Check if an element uses a transparent texture
 function hasTransparentTexture(cube) {
     if (!cube.faces) return false;
 
@@ -31,26 +32,28 @@ function hasTransparentTexture(cube) {
 }
 
 function isGlassByName(name) {
+    if (!name) return false;
     let n = name.toLowerCase();
     return n.includes('glass') || n.includes('window') || n.includes('transparent') ||
            n.includes('crystal') || n.includes('ice') || n.includes('water');
 }
 
 function isInnerByName(name) {
+    if (!name) return false;
     let n = name.toLowerCase();
     return n.includes('liquid') || n.includes('glow') || n.includes('inner') ||
            n.includes('potion') || n.includes('contents') || n.includes('fill');
 }
 
 function isInsideOther(cube, allCubes) {
-    let from1 = cube.from || [0,0,0];
-    let to1 = cube.to || [0,0,0];
+    let from1 = cube.from || [0, 0, 0];
+    let to1 = cube.to || [0, 0, 0];
 
     for (let other of allCubes) {
         if (other.uuid === cube.uuid) continue;
 
-        let from2 = other.from || [0,0,0];
-        let to2 = other.to || [0,0,0];
+        let from2 = other.from || [0, 0, 0];
+        let to2 = other.to || [0, 0, 0];
 
         if (from1[0] >= from2[0] && to1[0] <= to2[0] &&
             from1[1] >= from2[1] && to1[1] <= to2[1] &&
@@ -95,12 +98,7 @@ function applyTransparencyFix() {
         cube.mesh.renderOrder = 100;
     });
 
-    if (typeof Canvas !== 'undefined' && Canvas.updateAll) {
-        Canvas.updateAll();
-    }
-    if (typeof Preview !== 'undefined' && Preview.all) {
-        Preview.all.forEach(p => p.render && p.render());
-    }
+    Canvas.updateView({elements: allCubes, element_aspects: {transform: true}});
 }
 
 function removeTransparencyFix() {
@@ -109,32 +107,30 @@ function removeTransparencyFix() {
             if (!cube.mesh) return;
             cube.mesh.renderOrder = originalRenderOrders.get(cube.uuid) || 0;
         });
+
+        Canvas.updateView({elements: Cube.all, element_aspects: {transform: true}});
     }
 
     originalRenderOrders.clear();
-
-    if (typeof Canvas !== 'undefined' && Canvas.updateAll) {
-        Canvas.updateAll();
-    }
-    if (typeof Preview !== 'undefined' && Preview.all) {
-        Preview.all.forEach(p => p.render && p.render());
-    }
 }
 
 Plugin.register('transparency_fix', {
     title: 'Transparency Fix',
     author: 'Larsonix',
-    description: 'Shows objects inside transparent containers by adjusting render order. Auto-detects transparent textures and elements inside them.',
+    description: 'Shows objects inside transparent containers (glass, windows, etc.)',
+    about: 'This plugin fixes the visibility of objects inside transparent containers by adjusting render order.\n\n## Features\n- Auto-detects transparent textures by scanning alpha values\n- Name-based detection (glass, window, crystal, ice, liquid, glow, etc.)\n- Geometry detection - finds cubes inside transparent containers\n\n## Usage\nGo to **View > Toggle Transparency Fix** to enable/disable.\n\n## Note\nSome visual artifacts on transparent faces are a WebGL limitation and cannot be fixed. Models will render correctly in game engines.',
     icon: 'visibility',
     version: '2.0.0',
+    min_version: '4.0.0',
     variant: 'both',
+    tags: ['Rendering', 'Utility'],
 
     onload() {
-        new Action('toggle_transparency_fix', {
+        toggleAction = new Action('toggle_transparency_fix', {
             name: 'Toggle Transparency Fix',
             description: 'See objects inside transparent cubes (glass, windows, etc.)',
             icon: 'visibility',
-            click: function() {
+            click() {
                 fixEnabled = !fixEnabled;
                 if (fixEnabled) {
                     applyTransparencyFix();
@@ -146,7 +142,11 @@ Plugin.register('transparency_fix', {
             }
         });
 
-        MenuBar.addAction('toggle_transparency_fix', 'view');
+        MenuBar.addAction(toggleAction, 'view');
+
+        // Enable by default
+        fixEnabled = true;
+        setTimeout(applyTransparencyFix, 500);
 
         Blockbench.on('select_project', () => {
             if (fixEnabled) {
@@ -169,7 +169,11 @@ Plugin.register('transparency_fix', {
 
     onunload() {
         if (fixEnabled) removeTransparencyFix();
-        MenuBar.removeAction('view.toggle_transparency_fix');
+        toggleAction.delete();
+    },
+
+    oninstall() {
+        Blockbench.showQuickMessage('Transparency Fix installed! Find it in View menu.', 3000);
     }
 });
 
