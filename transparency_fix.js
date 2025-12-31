@@ -120,7 +120,7 @@ Plugin.register('transparency_fix', {
     description: 'Shows objects inside transparent containers (glass, windows, etc.)',
     about: 'This plugin fixes the visibility of objects inside transparent containers by adjusting render order.\n\n## Features\n- Auto-detects transparent textures by scanning alpha values\n- Name-based detection (glass, window, crystal, ice, liquid, glow, etc.)\n- Geometry detection - finds cubes inside transparent containers\n\n## Usage\nGo to **View > Toggle Transparency Fix** to enable/disable.\n\n## Note\nSome visual artifacts on transparent faces are a WebGL limitation and cannot be fixed. Models will render correctly in game engines.',
     icon: 'visibility',
-    version: '2.0.0',
+    version: '2.1.0',
     min_version: '4.0.0',
     variant: 'both',
     tags: ['Rendering', 'Utility'],
