@@ -2,6 +2,9 @@
 
 A Blockbench plugin that fixes the visibility of objects inside transparent containers (glass, windows, etc.).
 
+<img width="263" height="421" alt="potion_after" src="https://github.com/user-attachments/assets/73caa761-80e4-4743-b0be-bdc7d0c383cd" />
+<img width="263" height="421" alt="potion_before" src="https://github.com/user-attachments/assets/5a1ac20f-56a8-42b0-b3aa-6033d728f2a1" />
+
 ## The Problem
 
 Blockbench's WebGL renderer has a limitation where objects inside transparent cubes are not visible - they get hidden by the transparent surface due to depth sorting issues.
